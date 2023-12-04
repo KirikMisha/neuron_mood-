@@ -29,13 +29,16 @@ def extract_features(file_path):
 data = []
 labels = []
 
-# Замените путь на папку, где у вас лежат голосовые файлы
-data_path = "C:/Users/Михаил/Desktop/Все/Учеба/mood/"
+# Новые эмоции и пути к файлам записей
+new_emotions = ["anger", "disgust", "fear", "enthusiasm", "happiness", "neutral", "sadness"]
+new_data_path = "C:/Users/Михаил/Desktop/Все/Учеба/train/"
 
-# Предполагается, что у вас есть подпапки для разных эмоций (например, "joy", "sadness", "anger")
-emotions = ["joy", "sadness", "anger", "neutral"]
-for emotion in emotions:
-    emotion_path = os.path.join(data_path, emotion)
+# Преобразование меток в числовой формат
+label_encoder = LabelEncoder()
+
+# Извлечение признаков для новых эмоций
+for emotion in new_emotions:
+    emotion_path = os.path.join(new_data_path, emotion)
 
     # Добавьте эту проверку
     if not os.path.exists(emotion_path):
@@ -46,10 +49,9 @@ for emotion in emotions:
         filepath = os.path.join(emotion_path, filename)
         features = extract_features(filepath)
         data.append(features)
-        labels.append(emotion)
+        labels.append(emotion.split("_")[0])  # Используем первое слово в эмоции
 
 # Преобразование меток в числовой формат
-label_encoder = LabelEncoder()
 encoded_labels = label_encoder.fit_transform(labels)
 
 # Разделение данных на тренировочные и тестовые наборы
@@ -61,7 +63,7 @@ model.add(layers.Dense(128, activation='relu', input_shape=(X_train.shape[1],)))
 model.add(layers.Dropout(0.5))
 model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dropout(0.5))
-model.add(layers.Dense(len(emotions), activation='softmax'))
+model.add(layers.Dense(len(new_emotions), activation='softmax'))
 
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
@@ -72,7 +74,7 @@ model.fit(X_train, y_train, epochs=50, batch_size=16, validation_data=(X_test, y
 model.save("voice_emotion_model.h5")
 
 # Замените путь на ваш голосовой файл
-test_file_path = "C:/Users/Михаил/Desktop/Все/Учеба/грустный.wav"
+test_file_path = "C:/Users/Михаил/Desktop/Все/Учеба/Запись1.wav"
 
 # Извлечение признаков из тестового файла
 test_features = extract_features(test_file_path)

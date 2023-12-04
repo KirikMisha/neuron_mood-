@@ -1,8 +1,5 @@
-import os
-import librosa
 import numpy as np
 from keras.models import load_model
-from sklearn.preprocessing import LabelEncoder
 
 from read_audio import label_encoder, extract_features
 
