@@ -72,7 +72,7 @@ model.fit(X_train, y_train, epochs=50, batch_size=16, validation_data=(X_test, y
 model.save("voice_emotion_model.h5")
 
 # Замените путь на ваш голосовой файл
-test_file_path = "C:/Users/Михаил/Desktop/Все/Учеба/грустный.wav"
+test_file_path = "C:/Users/Михаил/Desktop/Все/Учеба/Запись1.wav"
 
 # Извлечение признаков из тестового файла
 test_features = extract_features(test_file_path)

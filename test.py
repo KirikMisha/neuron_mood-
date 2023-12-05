@@ -1,10 +1,8 @@
 import numpy as np
 from keras.models import load_model
+from read_audio import extract_features
 
-from read_audio import label_encoder, extract_features
-
-
-def predict_emotion(audio_file_path, model_path="voice_emotion_model.h5"):
+def predict_emotion(audio_file_path, model_path="voice_emotion_model.h5", emotions=["joy", "sadness", "anger", "neutral"]):
     # Загрузка обученной модели
     model = load_model(model_path)
 
@@ -18,7 +16,7 @@ def predict_emotion(audio_file_path, model_path="voice_emotion_model.h5"):
     predicted_label = np.argmax(predicted_probs)
 
     # Обратное преобразование числовой метки в текстовую эмоцию
-    predicted_emotion = label_encoder.inverse_transform([predicted_label])[0]
+    predicted_emotion = emotions[predicted_label]
 
     return predicted_emotion
 
