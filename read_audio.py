@@ -5,6 +5,10 @@ from keras import layers
 from keras import models
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
+from keras import regularizers
+from keras import optimizers
+from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.preprocessing.image import ImageDataGenerator
 
 # Получаем путь к рабочей директории проекта
 project_dir = os.path.dirname(os.path.abspath(__file__))
@@ -57,16 +61,23 @@ X_train, X_test, y_train, y_test = train_test_split(np.array(data), encoded_labe
 
 # Построение модели нейронной сети
 model = models.Sequential()
-model.add(layers.Dense(128, activation='relu', input_shape=(X_train.shape[1],)))
+model.add(layers.Dense(128, activation='relu', kernel_regularizer=regularizers.l2(0.01), input_shape=(X_train.shape[1],)))
 model.add(layers.Dropout(0.5))
-model.add(layers.Dense(64, activation='relu'))
+model.add(layers.Dense(64, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
 model.add(layers.Dropout(0.5))
 model.add(layers.Dense(len(emotions), activation='softmax'))
 
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+# Уменьшение learning rate
+model.compile(optimizer=optimizers.Adam(lr=0.0001), loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+# Добавление ранней остановки
+early_stop = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+
+# Добавление сохранения лучшей модели
+model_checkpoint = ModelCheckpoint('best_model.h5', save_best_only=True)
 
 # Обучение модели
-model.fit(X_train, y_train, epochs=50, batch_size=16, validation_data=(X_test, y_test))
+model.fit(X_train, y_train, epochs=50, batch_size=16, validation_data=(X_test, y_test), callbacks=[early_stop, model_checkpoint])
 
 # Сохранение модели (опционально)
 model.save("voice_emotion_model.h5")
