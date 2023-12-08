@@ -1,14 +1,11 @@
 import os
 import librosa
 import numpy as np
-from keras import layers
-from keras import models
+from keras import layers, models
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from keras import regularizers
-from keras import optimizers
-from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.preprocessing.image import ImageDataGenerator
+from sklearn.preprocessing import StandardScaler
+from keras.callbacks import EarlyStopping
 
 # Получаем путь к рабочей директории проекта
 project_dir = os.path.dirname(os.path.abspath(__file__))
@@ -59,25 +56,26 @@ encoded_labels = label_encoder.fit_transform(labels)
 # Разделение данных на тренировочные и тестовые наборы
 X_train, X_test, y_train, y_test = train_test_split(np.array(data), encoded_labels, test_size=0.2, random_state=42)
 
+# Нормализация данных
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
 # Построение модели нейронной сети
 model = models.Sequential()
-model.add(layers.Dense(128, activation='relu', kernel_regularizer=regularizers.l2(0.01), input_shape=(X_train.shape[1],)))
+model.add(layers.Dense(128, activation='relu', input_shape=(X_train_scaled.shape[1],)))
 model.add(layers.Dropout(0.5))
-model.add(layers.Dense(64, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dropout(0.5))
 model.add(layers.Dense(len(emotions), activation='softmax'))
 
-# Уменьшение learning rate
-model.compile(optimizer=optimizers.Adam(lr=0.0001), loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
-# Добавление ранней остановки
-early_stop = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
-
-# Добавление сохранения лучшей модели
-model_checkpoint = ModelCheckpoint('best_model.h5', save_best_only=True)
+# Ранняя остановка
+early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
 
 # Обучение модели
-model.fit(X_train, y_train, epochs=50, batch_size=16, validation_data=(X_test, y_test), callbacks=[early_stop, model_checkpoint])
+model.fit(X_train_scaled, y_train, epochs=50, batch_size=16, validation_data=(X_test_scaled, y_test), callbacks=[early_stopping])
 
 # Сохранение модели (опционально)
 model.save("voice_emotion_model.h5")
